@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const tempMovieData = [
   {
@@ -53,15 +53,27 @@ const average = (arr) =>
 export default function App() {
   const [movies, setMovies] = useState(tempMovieData);
   const [watched, setWatched] = useState(tempWatchedData);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const KEY = "4b34a4c0";
+  useEffect(function () {
+    async function fetchMovies() {
+      const result = await fetch(
+        `https://corsproxy.io/?http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`
+      );
+      const data = await result.json();
+      setMovies(data.Search);
+    }
+    fetchMovies();
+  }, []);
+
   return (
     <>
       <NavBar>
         <NumResults movies={movies} />
       </NavBar>
       <Main>
-        <Box>
-          <MovieList movies={movies} />
-        </Box>
+        <Box>{isLoading ? <Loader /> : <MovieList movies={movies} />}</Box>
         <Box>
           <WatchedSummary watched={watched} />
           <WatchedMovieList watched={watched} />
@@ -69,6 +81,9 @@ export default function App() {
       </Main>
     </>
   );
+}
+function Loader() {
+  return <p className="loader">Loading...</p>;
 }
 function Main({ children }) {
   return <main className="main">{children}</main>;
