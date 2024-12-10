@@ -1,3 +1,4 @@
+import axios from "axios";
 
 
 export default function Logo() {
@@ -8,3 +9,4 @@ export default function Logo() {
       </div>
     );
   }
+

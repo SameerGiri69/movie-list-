@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import NavBar from "./Components/NavBar";
-import WatchedMovieList from "./Components/MovieList";
+import WatchedMovieList from "./Components/WatchedMovieList";
+import StarRating from "./starRating";
+import Spinner from "./Components/Spinner/Spinner";
 
 const tempMovieData = [
   {
@@ -48,6 +50,7 @@ const tempWatchedData = [
   },
 ];
 
+const KEY = "4b34a4c0";
 export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState(tempMovieData);
@@ -55,7 +58,6 @@ export default function App() {
   const [query, setQuery] = useState("interstellar");
   const [selectedMovieId, setSelectedMovieId] = useState(null);
   //Api key
-  const KEY = "4b34a4c0";
 
   function onMovieClick(movieId) {
     setSelectedMovieId((selectedMovieId) =>
@@ -124,12 +126,68 @@ export default function App() {
   );
 }
 function MovieDetail({ selectedId, oncloseMovie }) {
+  const [movie, setMovie] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const {
+    Title: title,
+    Year: year,
+    Runtime: runtime,
+    imdbRating,
+    Plot: plot,
+    Released: released,
+    Poster: poster,
+    Genre: genre,
+    Actors: actors,
+    Director: director,
+  } = movie;
+  useEffect(
+    function () {
+      debugger;
+
+      setIsLoading(true);
+      async function getMovieDetails() {
+        const result = await fetch(
+          `http://www.omdbapi.com/?apikey=${KEY}&i=${selectedId}`
+        );
+        const data = await result.json();
+        setMovie(data);
+        setIsLoading(false);
+      }
+      getMovieDetails();
+    },
+    [selectedId]
+  );
+
   return (
     <div className="details">
-      <button className="btn-back" onClick={() => oncloseMovie()}>
-        &larr;
-      </button>
-      {selectedId}
+      {isLoading ? (
+        <Spinner />
+      ) : (
+        <>
+          <header>
+            <button className="btn-back" onClick={() => oncloseMovie()}>
+              &larr;
+            </button>
+            <img alt="movieposter" src={poster} />
+            <div className="details-overview">
+              <h2>{title}</h2>
+              <p>
+                {released} &bull; {runtime}
+              </p>
+              <p>{genre}</p>
+            </div>
+          </header>
+          <section>
+            <StarRating />
+            <p>
+              <em>{plot}</em>
+            </p>
+            <p>Starring {actors}</p>
+            <p>Directed by {director}</p>
+          </section>
+          {selectedId}
+        </>
+      )}
     </div>
   );
 }
@@ -188,7 +246,7 @@ function Box({ children }) {
   );
 }
 
-function NumResults({ movies }) {
+function NumResults({ movies = [] }) {
   return (
     <p className="num-results">
       Found <strong>{movies.length}</strong> results
@@ -211,7 +269,7 @@ function Search({ query, setQuery }) {
 function MovieList({ movies, onMovieClick }) {
   return (
     <ul className="list">
-      {movies?.map((movie) => (
+      {movies.map((movie) => (
         <Movie movie={movie} key={movie.imdbID} onMovieClick={onMovieClick} />
       ))}
     </ul>
